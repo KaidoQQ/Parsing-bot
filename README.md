@@ -35,28 +35,31 @@ A modular Telegram bot built with **Python 3.10+**, **Aiogram 3.x**, and **Selen
 
 ## ⚙️ Installation & Setup
 
-1. **Clone the repository:**
+## 1. **Clone the repository:**
   (Cloning into a shorter folder name 'parsing-bot' for convenience)
   ```bash
   git clone [https://github.com/KaidoQQ/Async-Telegram-Bot-for-Data-Parsing-Doctors-Products-.git](https://github.com/KaidoQQ/Async-Telegram-Bot-for-Data-Parsing-Doctors-Products-.git) parsing-bot
   cd parsing-bot
+  ```
 
-2. **Create a virtual environment (optional but recommended):**
+## 2. **Create a virtual environment (optional but recommended):**
   * python -m venv venv
     # Windows:
   * venv\Scripts\activate
     # Mac/Linux:
     source venv/bin/activate
 
-3. **Install dependencies:**
+## 3. **Install dependencies:**
   * pip install aiogram selenium webdriver-manager pandas openpyxl
 
-4. **Configure the Bot:**
+## 4. **Configure the Bot:**
   * Open main.py
   * Replace TOKEN = "YOUR_TOKEN_HERE" with your actual Telegram Bot Token from @BotFather.
 
-5. **Run the Bot:**
-  * *python bot.py*
+## 5. **Run the Bot:**
+  ```bash
+    python bot.py
+  ```
 
 ## 📂 Project Structure
 
