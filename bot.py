@@ -27,6 +27,7 @@ dp = Dispatcher()
 
 class DoctorSearch(StatesGroup):
   waiting_for_name = State()
+  waiting_for_city = State()
   waiting_for_date = State()
 
 class ProductSearch(StatesGroup):
@@ -63,13 +64,19 @@ async def cmd_help(message: types.Message):
 
 @dp.message(F.text == "👨‍⚕️ Doctor Search")
 async def doctor_name_search(message: types.Message, state: FSMContext):
-  await message.answer("Please enter the *Doctor's Name* or *Specialty* (e.g., Dentist, Dr. House):")
+  await message.answer("Please enter the *Specialty* (e.g., Dentist):")
   await state.set_state(DoctorSearch.waiting_for_name)
-
 
 @dp.message(DoctorSearch.waiting_for_name)
 async def doctor_name_chosen(message: types.Message, state: FSMContext):
   await state.update_data(doctor_name = message.text)
+  await message.answer("Got it. Now please enter the *City* (e.g., Krakow):")
+  await state.set_state(DoctorSearch.waiting_for_city)
+
+
+@dp.message(DoctorSearch.waiting_for_city)
+async def doctor_name_chosen(message: types.Message, state: FSMContext):
+  await state.update_data(city = message.text)
   await message.answer("Got it. Now please enter the *Date or Period* (e.g., Tomorrow):")
   await state.set_state(DoctorSearch.waiting_for_date)
 
@@ -77,11 +84,12 @@ async def doctor_name_chosen(message: types.Message, state: FSMContext):
 async def doctor_date_chosen(message: types.Message, state: FSMContext):
   user_data = await state.get_data()
   name = user_data['doctor_name']
+  city = user_data['city']
   date = message.text
 
-  await message.answer(f"🔎 Searching for *{name}* on *{date}*... Please wait.")
+  await message.answer(f"🔎 Searching for *{name}* in *{city}* on *{date}*... Please wait.")
 
-  result = await search_doctors_func(name,date)
+  result = await search_doctors_func(name,date,city)
 
   await message.answer(f"✅ Done! Result: {result}")
   await state.clear()
