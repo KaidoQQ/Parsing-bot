@@ -15,7 +15,7 @@ from parsers.product_parser import search_products_func
 
 load_dotenv("tokens.env")
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN") #---- Your token here
 
 logging.basicConfig(level=logging.INFO)
 
