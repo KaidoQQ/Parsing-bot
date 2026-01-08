@@ -77,7 +77,7 @@ async def doctor_name_chosen(message: types.Message, state: FSMContext):
 @dp.message(DoctorSearch.waiting_for_city)
 async def doctor_name_chosen(message: types.Message, state: FSMContext):
   await state.update_data(city = message.text)
-  await message.answer("Got it. Now please enter the *Date or Period* (e.g., Tomorrow):")
+  await message.answer("Got it. Now please enter the *Date or Period* (e.g., Nearest):")
   await state.set_state(DoctorSearch.waiting_for_date)
 
 @dp.message(DoctorSearch.waiting_for_date)
@@ -87,7 +87,7 @@ async def doctor_date_chosen(message: types.Message, state: FSMContext):
   city = user_data['city']
   date = message.text
 
-  await message.answer(f"🔎 Searching for *{name}* in *{city}* on *{date}*... Please wait.")
+  await message.answer(f"🔎 Searching for *{name}* in *{city}* on Date[*{date}*]... Please wait.")
 
   result = await search_doctors_func(name,date,city)
 

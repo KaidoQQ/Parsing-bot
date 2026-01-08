@@ -50,11 +50,13 @@ A modular Telegram bot built with **Python 3.10+**, **Aiogram 3.x**, and **Selen
     source venv/bin/activate
 
 ## 3. **Install dependencies:**
-  * pip install aiogram selenium webdriver-manager pandas openpyxl
+  ```bash
+    pip install aiogram selenium webdriver-manager pandas openpyxl
+  ```
 
 ## 4. **Configure the Bot:**
-  * Open main.py
-  * Replace TOKEN = "YOUR_TOKEN_HERE" with your actual Telegram Bot Token from @BotFather.
+  1. Open main.py
+  2. Replace TOKEN = "YOUR_TOKEN_HERE" with your actual Telegram Bot Token from @BotFather.
 
 ## 5. **Run the Bot:**
   ```bash
