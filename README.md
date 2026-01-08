@@ -64,7 +64,7 @@ A modular Telegram bot built with **Python 3.10+**, **Aiogram 3.x**, and **Selen
   ```
 
 ## 📂 Project Structure
-
+```text
 Parsing-bot/
 ├── main.py                  # Entry point (Handlers, FSM, Menu)
 ├── parsers/                 # Logic for web scraping
@@ -72,6 +72,7 @@ Parsing-bot/
 │   ├── doctor_parser.py     # Selenium logic for doctors
 │   └── product_parser.py    # Selenium logic for products
 └── README.md                # Project documentation
+```
 
 ## 📝 Roadmap
 
