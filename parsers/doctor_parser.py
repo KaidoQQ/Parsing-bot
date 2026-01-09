@@ -118,9 +118,9 @@ def run_selenium_parse(doctor_name,date,city):
     print(f"✴️ [SELENIUM] Finished")
   
   if len(parsed_data) > 0:
-    return str(parsed_data)
+    return parsed_data
   else:
-    return f"Nothing was found {len(parsed_data)}"
+    return []
     
 
 

@@ -12,6 +12,9 @@ import sqlite3
 import os
 from parsers.doctor_parser import search_doctors_func
 from parsers.product_parser import search_products_func
+from to_exel import excel_file
+from aiogram.types import FSInputFile
+
 
 load_dotenv("tokens.env")
 
@@ -87,11 +90,16 @@ async def doctor_date_chosen(message: types.Message, state: FSMContext):
   city = user_data['city']
   date = message.text
 
-  await message.answer(f"🔎 Searching for *{name}* in *{city}* on Date[*{date}*]... Please wait.")
+  await message.answer(f"🔎 Searching for *{name}* in *{city}* on *Date[{date}]*... Please wait.")
 
-  result = await search_doctors_func(name,date,city)
+  result_data = await search_doctors_func(name,date,city)
 
-  await message.answer(f"✅ Done! Result: {result}")
+  file_path = await excel_file(result_data)
+  if file_path:
+    document = FSInputFile(file_path)
+    await message.answer_document(document, caption=f"✅ Done! Here is the list for you")
+  else:
+    await message.answer("❌ Nothing was found or error creating file.")
   await state.clear()
 
 @dp.message(F.text == "🛍 Product Search")
@@ -113,18 +121,22 @@ async def product_budget_chosen(message: types.Message, state: FSMContext):
 
   await message.answer(f"🔎 Searching for *{category}* with budget *{budget}*... Please wait.")
 
-  result = await search_products_func(category,budget)
-
-  await message.answer(f"✅ Done! Result: {result}")
+  result_data = await search_products_func(category,budget)
+  file_path = await excel_file(result_data)
+  if file_path:
+    document = FSInputFile(file_path)
+    await message.answer_document(document, caption=f"✅ Done! Here is the list for you")
+  else:
+    await message.answer("❌ Nothing was found or error creating file.")
   await state.clear()
 
 
 async def main():
-  print("Bot Started!")
+  print("🧿Bot Started!")
   await dp.start_polling(bot)
 
 if __name__ == "__main__":
   try:
     asyncio.run(main())
   except KeyboardInterrupt:
-    print("Bot collapse!")
+    print("☠️Bot collapse!")
