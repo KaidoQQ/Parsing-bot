@@ -67,9 +67,9 @@ A modular Telegram bot built with **Python 3.10+**, **Aiogram 3.x**, and **Selen
 ```text
 Parsing-bot/
 ├── bot.py                  # Entry point (Handlers, FSM, Menu)
-├── tech/ # Folder for system files
-│   ├── database.py # Data base creating file
-│   └── to_exel.py #Converter to exel file
+├── tech/                   # Folder for system files
+│   ├── database.py         # Data base creating file
+│   └── to_exel.py           #Converter to exel file
 ├── parsers/                 # Logic for web scraping
 │   ├── __init__.py
 │   ├── doctor_parser.py     # Selenium logic for doctors
