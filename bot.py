@@ -12,7 +12,8 @@ import sqlite3
 import os
 from parsers.doctor_parser import search_doctors_func
 from parsers.product_parser import search_products_func
-from to_exel import excel_file
+from tech.to_exel import excel_file
+from tech.database import DataBase
 from aiogram.types import FSInputFile
 
 
@@ -21,6 +22,8 @@ load_dotenv("tokens.env")
 BOT_TOKEN = os.getenv("BOT_TOKEN") #---- Your token here
 
 logging.basicConfig(level=logging.INFO)
+
+db = DataBase('bot_database.db')
 
 bot = Bot(
   token=BOT_TOKEN, 
@@ -40,6 +43,9 @@ class ProductSearch(StatesGroup):
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
+  db.add_user(message.from_user.id, message.from_user.username)
+  print(f"👤 User {message.from_user.first_name} saved to DB")
+
   kb = [
     [KeyboardButton(text = "👨‍⚕️ Doctor Search"),
     KeyboardButton(text = "🛍 Product Search")
@@ -90,16 +96,19 @@ async def doctor_date_chosen(message: types.Message, state: FSMContext):
   city = user_data['city']
   date = message.text
 
+  search_query = f"Doctor: {name}, City: {city}, Date: {date}"
+  db.add_search_log(message.from_user.id, "doctor_search", search_query)
+
   await message.answer(f"🔎 Searching for *{name}* in *{city}* on *Date[{date}]*... Please wait.")
 
   result_data = await search_doctors_func(name,date,city)
 
   file_path = await excel_file(result_data)
   if file_path:
-    document = FSInputFile(file_path)
+    document = FSInputFile(file_path,filename=f"{name}_doctor_list.xlsx")
     await message.answer_document(document, caption=f"✅ Done! Here is the list for you")
   else:
-    await message.answer("❌ Nothing was found or error creating file.")
+    await message.answer("❌ [ERROR] Nothing was found or error creating file.")
   await state.clear()
 
 @dp.message(F.text == "🛍 Product Search")
@@ -119,6 +128,9 @@ async def product_budget_chosen(message: types.Message, state: FSMContext):
   category = user_data['category']
   budget = message.text
 
+  search_query = f"Category: {category}, Budget: {budget}"
+  db.add_search_log(message.from_user.id, "product_search", search_query)
+
   await message.answer(f"🔎 Searching for *{category}* with budget *{budget}*... Please wait.")
 
   result_data = await search_products_func(category,budget)
@@ -127,7 +139,7 @@ async def product_budget_chosen(message: types.Message, state: FSMContext):
     document = FSInputFile(file_path)
     await message.answer_document(document, caption=f"✅ Done! Here is the list for you")
   else:
-    await message.answer("❌ Nothing was found or error creating file.")
+    await message.answer("❌ [ERROR] Nothing was found or error creating file.")
   await state.clear()
 
 

@@ -4,7 +4,7 @@ import os
 
 def creator_excel(data,filename="doctors_list.xlsx"):
   if not data:
-    print("❌ NO DATA FOR EXCEL")
+    print("❌ [ERROR] NO DATA FOR EXCEL")
     return None
   try:
     if isinstance(data,dict):
@@ -15,6 +15,8 @@ def creator_excel(data,filename="doctors_list.xlsx"):
       'name': 'Name',
       'ph_number': 'Phone number',
       'near_date': 'Nearest date', 
+      'street' : 'Street',
+      'link': 'URL'
     }, inplace=True)
 
     df.to_excel(filename,index=False)
@@ -22,7 +24,7 @@ def creator_excel(data,filename="doctors_list.xlsx"):
 
     return os.path.abspath(filename)
   except Exception as e:
-    print(f"❌ Error while creating Excel: {e}")
+    print(f"❌ [ERROR] while creating Excel: {e}")
     return None
   
 

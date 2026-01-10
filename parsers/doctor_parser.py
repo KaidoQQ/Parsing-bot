@@ -85,34 +85,50 @@ def run_selenium_parse(doctor_name,date,city):
               print("❌ No phone number was found")
 
             name = name_el.text
-            try:
-              near_date_el = doctor.find_element(By.CSS_SELECTOR, ".tb-data")
-              near_date = near_date_el.text
-              new_date = convert_polish_date(near_date)
-            except:
+            n_date = date.lower()
+            n_date = n_date.replace(" ","")
+
+            if n_date == "nearest":
               try:
-                near_date_el = doctor.find_element(By.CSS_SELECTOR, ".tb-none")
+                near_date_el = doctor.find_element(By.CSS_SELECTOR, ".tb-data")
                 near_date = near_date_el.text
-                new_date = "This doctor didnt indicate an upcoming date"
+                new_date = convert_polish_date(near_date)
               except:
-                new_date = "Date info not found"
+                try:
+                  near_date_el = doctor.find_element(By.CSS_SELECTOR, ".tb-none")
+                  near_date = near_date_el.text
+                  new_date = "This doctor didnt indicate an upcoming date"
+                except:
+                  new_date = "Date info not found"
+
+            try:
+              street_el = doctor.find_element(By.CSS_SELECTOR, "span.device-n")
+              street = street_el.text
+
+              url_link = doctor.find_element(By.CSS_SELECTOR, "a[id^=linkNazwaZasobu_]")
+              url = url_link.get_attribute("href")
+            except Exception as e:
+              print(f"❌ [ERROR] Something wrong {e}")
 
 
             parsed_doc = {
               'name' : name,
               'ph_number' : ph_number,
-              'near_date' : new_date
+              'near_date' : new_date,
+              'street': street,
+              'link': url
             }
 
             parsed_data.append(parsed_doc)
-            print(f"✅  Doctor: {name} | Tel: {ph_number} | Date: {new_date}")
+            print(f"✅  Doctor: {name} | Tel: {ph_number} | Date: {new_date} | Street: {street} | Link: {url}")
+            print()
           else:
-            print("❌ Error cant find a doctor card!")
+            print("❌ [ERROR] cant find a doctor card!")
     except Exception as e:
-      print(f"❌ Error no doctors was found {e}")
+      print(f"❌ [ERROR] no doctors was found {e}")
 
   except Exception as e:
-    print(f"⭕ GLOBAL ERROR longer than 5 sec or ERROR_NAME: {e}")
+    print(f"⭕ [GLOBAL ERROR] longer than 5 sec or ERROR_NAME: {e}")
   finally:
     driver.quit()
     print(f"✴️ [SELENIUM] Finished")
@@ -159,7 +175,7 @@ def convert_polish_date(date_str):
     return f"{year}-{month_number}-{day}"
     
   except Exception as e:
-    print(f"❌ ERROR Conversion: {e}")
+    print(f"❌ [ERROR] Conversion: {e}")
     return date_str
 
 

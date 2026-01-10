@@ -1,5 +1,7 @@
 tokens.env
 test.py
+bot_database.db
+doctors_list.xlsx
 
 __pycache__/
 venv/
