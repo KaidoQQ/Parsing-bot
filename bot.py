@@ -32,9 +32,13 @@ bot = Bot(
 dp = Dispatcher()
 
 class DoctorSearch(StatesGroup):
+  waiting_for_name_spec = State()
+  waiting_for_city_spec  = State()
+  waiting_for_date_spec  = State()
+
   waiting_for_name = State()
-  waiting_for_city = State()
-  waiting_for_date = State()
+  waiting_for_city  = State()
+  waiting_for_date  = State()
 
 class ProductSearch(StatesGroup):
   waiting_for_category = State()
@@ -47,7 +51,8 @@ async def cmd_start(message: types.Message):
   print(f"👤 User {message.from_user.first_name} saved to DB")
 
   kb = [
-    [KeyboardButton(text = "👨‍⚕️ Doctor Search"),
+    [KeyboardButton(text = "👨‍⚕️ Doctor Search (Specialty)"),
+     KeyboardButton(text = "👨‍⚕️ Doctor Search (Name Surname)"),
     KeyboardButton(text = "🛍 Product Search")
     ],
     [
@@ -71,45 +76,74 @@ async def cmd_help(message: types.Message):
   await message.answer("I can help you find open slots for doctors or track product prices.")
 
 
-@dp.message(F.text == "👨‍⚕️ Doctor Search")
-async def doctor_name_search(message: types.Message, state: FSMContext):
+@dp.message(F.text == "👨‍⚕️ Doctor Search (Specialty)")
+async def doctor_name_search_spec(message: types.Message, state: FSMContext):
   await message.answer("Please enter the *Specialty* (e.g., Dentist):")
-  await state.set_state(DoctorSearch.waiting_for_name)
+  await state.set_state(DoctorSearch.waiting_for_name_spec)
 
-@dp.message(DoctorSearch.waiting_for_name)
-async def doctor_name_chosen(message: types.Message, state: FSMContext):
-  await state.update_data(doctor_name = message.text)
+@dp.message(DoctorSearch.waiting_for_name_spec)
+async def doctor_name_chosen_spec(message: types.Message, state: FSMContext):
+  await state.update_data(doctor_name_spec = message.text)
   await message.answer("Got it. Now please enter the *City* (e.g., Krakow):")
-  await state.set_state(DoctorSearch.waiting_for_city)
+  await state.set_state(DoctorSearch.waiting_for_city_spec)
 
 
-@dp.message(DoctorSearch.waiting_for_city)
-async def doctor_name_chosen(message: types.Message, state: FSMContext):
-  await state.update_data(city = message.text)
+@dp.message(DoctorSearch.waiting_for_city_spec)
+async def doctor_name_chosen_spec(message: types.Message, state: FSMContext):
+  await state.update_data(city_spec = message.text)
   await message.answer("Got it. Now please enter the *Date or Period* (e.g., Nearest):")
-  await state.set_state(DoctorSearch.waiting_for_date)
+  await state.set_state(DoctorSearch.waiting_for_date_spec)
 
-@dp.message(DoctorSearch.waiting_for_date)
-async def doctor_date_chosen(message: types.Message, state: FSMContext):
+@dp.message(DoctorSearch.waiting_for_date_spec)
+async def doctor_date_chosen_spec(message: types.Message, state: FSMContext):
   user_data = await state.get_data()
-  name = user_data['doctor_name']
-  city = user_data['city']
-  date = message.text
+  name = user_data['doctor_name_spec'].lower().strip()
+  city = user_data['city_spec'].lower().strip()
+  date = message.text.lower().strip()
 
   search_query = f"Doctor: {name}, City: {city}, Date: {date}"
-  db.add_search_log(message.from_user.id, "doctor_search", search_query)
+  cached_path = db.get_cached_file(search_query)
+
+  if cached_path and os.path.exists(cached_path):
+    print(f"📦 Found in cache: {cached_path}")
+    await message.answer("📦 Found cached result! Sending file...")
+
+    document = FSInputFile(cached_path, filename=f"{name}_doctor_list.xlsx")
+    await message.answer_document(document, caption=f"✅ Done! (Loaded from cache)")
+    await state.clear()
+    return 
 
   await message.answer(f"🔎 Searching for *{name}* in *{city}* on *Date[{date}]*... Please wait.")
 
-  result_data = await search_doctors_func(name,date,city)
+  result_data = await search_doctors_func(doctor_name=None,doctor_name_spec=name,date=date,city=city)
 
-  file_path = await excel_file(result_data)
+  # Генерируем уникальное имя для файла на диске
+  # Используем replace, чтобы убрать пробелы, которые могут мешать системе
+  safe_name = name.replace(" ", "_")
+  new_filename = f"cache/{safe_name}_{city}_{date}.xlsx"
+
+  file_path = await excel_file(result_data, filename=new_filename)
+
   if file_path:
+    db.add_search_log(message.from_user.id, "doctor_search", search_query, file_path)
+
     document = FSInputFile(file_path,filename=f"{name}_doctor_list.xlsx")
     await message.answer_document(document, caption=f"✅ Done! Here is the list for you")
   else:
     await message.answer("❌ [ERROR] Nothing was found or error creating file.")
   await state.clear()
+
+
+
+@dp.message(F.text == "👨‍⚕️ Doctor Search (Name Surname)")
+async def doctor_name_search(message: types.Message, state: FSMContext):
+  await message.answer("Please enter the doctors *Name and Surname* (e.g.,Alla Krykhta)")
+  await state.set_state(DoctorSearch.waiting_for_name)
+
+
+
+
+
 
 @dp.message(F.text == "🛍 Product Search")
 async def product_category_search(message: types.Message, state:FSMContext):
@@ -144,11 +178,11 @@ async def product_budget_chosen(message: types.Message, state: FSMContext):
 
 
 async def main():
-  print("🧿Bot Started!")
+  print("🧿 Bot Started!")
   await dp.start_polling(bot)
 
 if __name__ == "__main__":
   try:
     asyncio.run(main())
   except KeyboardInterrupt:
-    print("☠️Bot collapse!")
+    print("☠️ Bot collapse!")

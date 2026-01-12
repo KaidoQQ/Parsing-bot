@@ -10,6 +10,12 @@ def creator_excel(data,filename="doctors_list.xlsx"):
     if isinstance(data,dict):
       data = [data]
 
+    directory = os.path.dirname(filename)
+    if directory and not os.path.exists(directory):
+      os.makedirs(directory)
+      print(f"📁 Created directory: {directory}")
+
+      
     df = pd.DataFrame(data)
     df.rename(columns={
       'name': 'Name',
@@ -28,6 +34,6 @@ def creator_excel(data,filename="doctors_list.xlsx"):
     return None
   
 
-async def excel_file(data):
-  result = await asyncio.to_thread(creator_excel,data)
+async def excel_file(data,filename="doctors_list.xlsx"):
+  result = await asyncio.to_thread(creator_excel,data,filename)
   return result

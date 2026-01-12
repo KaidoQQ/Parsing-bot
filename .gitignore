@@ -1,7 +1,7 @@
 tokens.env
 test.py
 bot_database.db
-doctors_list.xlsx
+cache/
 
 __pycache__/
 venv/
