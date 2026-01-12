@@ -89,6 +89,6 @@ Parsing-bot/
 
 * [x] Excel report generation
 
-* [ ] SQLite Database integration
+* [x] SQLite Database integration
 
 *Created by [KaidoQQ](https://github.com/KaidoQQ)*
