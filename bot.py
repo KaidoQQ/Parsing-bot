@@ -140,8 +140,56 @@ async def doctor_name_search(message: types.Message, state: FSMContext):
   await message.answer("Please enter the doctors *Name and Surname* (e.g.,Alla Krykhta)")
   await state.set_state(DoctorSearch.waiting_for_name)
 
+@dp.message(DoctorSearch.waiting_for_name)
+async def doctor_name_chosen_spec(message: types.Message, state: FSMContext):
+  await state.update_data(doctor_name = message.text)
+  await message.answer("Got it. Now please enter the *City* (e.g., Krakow):")
+  await state.set_state(DoctorSearch.waiting_for_city)
 
+@dp.message(DoctorSearch.waiting_for_city)
+async def doctor_name_chosen_spec(message: types.Message, state: FSMContext):
+  await state.update_data(city = message.text)
+  await message.answer("Got it. Now please enter the *Date or Period* (e.g., Nearest):")
+  await state.set_state(DoctorSearch.waiting_for_date)
 
+@dp.message(DoctorSearch.waiting_for_date)
+async def doctor_date_chosen_spec(message: types.Message, state: FSMContext):
+  user_data = await state.get_data()
+  name = user_data['doctor_name'].lower().strip()
+  city = user_data['city'].lower().strip()
+  date = message.text.lower().strip()
+
+  search_query = f"Doctor: {name}, City: {city}, Date: {date}"
+  cached_path = db.get_cached_file(search_query)
+
+  if cached_path and os.path.exists(cached_path):
+    print(f"📦 Found in cache: {cached_path}")
+    await message.answer("📦 Found cached result! Sending file...")
+
+    document = FSInputFile(cached_path, filename=f"{name}_doctor_list.xlsx")
+    await message.answer_document(document, caption=f"✅ Done! (Loaded from cache)")
+    await state.clear()
+    return 
+
+  await message.answer(f"🔎 Searching for *{name}* in *{city}* on *Date[{date}]*... Please wait.")
+
+  result_data = await search_doctors_func(doctor_name=name,doctor_name_spec=None,date=date,city=city)
+
+  # Генерируем уникальное имя для файла на диске
+  # Используем replace, чтобы убрать пробелы, которые могут мешать системе
+  safe_name = name.replace(" ", "_")
+  new_filename = f"cache/{safe_name}_{city}_{date}.xlsx"
+
+  file_path = await excel_file(result_data, filename=new_filename)
+
+  if file_path:
+    db.add_search_log(message.from_user.id, "doctor_search", search_query, file_path)
+
+    document = FSInputFile(file_path,filename=f"{name}_doctor_list.xlsx")
+    await message.answer_document(document, caption=f"✅ Done! Here is the list for you")
+  else:
+    await message.answer("❌ [ERROR] Nothing was found or error creating file.")
+  await state.clear()
 
 
 
