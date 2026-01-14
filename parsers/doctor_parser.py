@@ -19,7 +19,7 @@ URL = os.getenv("URL")
 def run_selenium_parse(doctor_name = None, doctor_name_spec = None, date = None, city = None):
   print(f"✳️ [SELENIUM] Starts...")
   chrome_option = Options()
-  #chrome_option.add_argument("--headless")
+  chrome_option.add_argument("--headless")
   chrome_option.add_argument("--window-size=1920,1080")
   chrome_option.add_argument("--no-sandbox")
   chrome_option.add_argument("--disable-dev-shm-usage")
@@ -28,7 +28,7 @@ def run_selenium_parse(doctor_name = None, doctor_name_spec = None, date = None,
   service = Service(ChromeDriverManager().install())
   driver = webdriver.Chrome(service=service,options=chrome_option)
 
-  wait = WebDriverWait(driver,10)
+  wait = WebDriverWait(driver,7)
   driver.get(URL)
   name = None
   parsed_data = []
@@ -143,38 +143,55 @@ def run_selenium_parse(doctor_name = None, doctor_name_spec = None, date = None,
         if info:
           street = "Address not found"
           try:
-            street_el = driver.find_element(By.CSS_SELECTOR, "address, .metryka-adres, .place-address, .thd-address")
+            street_el = driver.find_element(By.CSS_SELECTOR, "span[class='w-s:n']")
             street = street_el.text.strip()
           except:
-            print("⚠️ Street element not found")
+            print(f"⚠️ Street element not found")
 
           ph_number = "No phone number"
           try:
-            phone_btn = info.find_element(By.XPATH, ".//button[contains(@onclick, 'pokazTelefon')]")
-            driver.execute_script("arguments[0].click();", phone_btn)
-
-            time.sleep(1)
-
-            phone_link = info.find_element(By.XPATH, ".//a[contains(@href, 'tel:')]")
-
-            ph_number = phone_link.get_attribute("textContent").strip()
-
-            print("✅ Phone number of doctor was added")
-            print(ph_number)
+            phone_links = driver.find_elements(By.CSS_SELECTOR, "a[href^='tel:']")
+            found_phone = False
+            for link in phone_links:
+              href_val = link.get_attribute("href")
+              if href_val and "tel:" in href_val:
+                clean_phone = href_val.replace("tel:", "").strip()
+                if len(clean_phone) > 5: 
+                  ph_number = clean_phone
+                  found_phone = True
+                  print(f"✅ Phone number found directly from hidden link: {ph_number}")
+                  break
+            
+            if not found_phone:
+              print("⚠️ Hidden link empty, trying to click button...")
+              phone_btn = driver.find_element(By.CSS_SELECTOR, "button[onclick*='pokazTelefon']")
+              driver.execute_script("arguments[0].click();", phone_btn)
+              time.sleep(1)
+              
+              phone_link = driver.find_element(By.CSS_SELECTOR, "a[href^='tel:']")
+              ph_number = phone_link.get_attribute("textContent").strip()
+              print(f"✅ Phone number found after click: {ph_number}")
           except:
-            print("❌ No phone number was found")
+            print("❌ [ERROR] No phone number was found")
           
           name = doctor_name
 
           parsed_dates = []
 
           try:
-            dates = info.find_elements(By.CSS_SELECTOR, ".agenda-data")
-          
-            for date_ in dates:
-              new_date = date_.text
-              new_date = convert_polish_date(new_date)
-              parsed_dates.append(new_date)
+            calendar_container = wait.until(EC.presence_of_element_located((By.ID, "kolumnaTerminyPRV")))
+            if calendar_container:
+              days_cards = calendar_container.find_elements(By.CSS_SELECTOR, "div.agenda-day")
+              for card in days_cards:
+                try:
+                  day=card.find_element(By.CSS_SELECTOR, "p.agenda-data") 
+                  new_date = day.text
+                  clean_date = convert_polish_date(new_date)
+                  parsed_dates.append(clean_date)
+                except:
+                  continue
+            else:
+              print("❌ [ERROR] Cant find all dates!")
             
             if not parsed_dates:
               parsed_dates.append("No available dates visible")
