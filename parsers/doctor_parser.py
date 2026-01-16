@@ -218,7 +218,7 @@ def run_selenium_parse(doctor_name = None, doctor_name_spec = None, date = None,
         print(f"❌ [ERROR] No doctor was found {e}")
 
   except Exception as e:
-    print(f"⭕ [GLOBAL ERROR] Longer than 5 sec or ERROR_NAME: {e}")
+    print(f"⭕ [GLOBAL ERROR] Longer than 7 sec or ERROR_NAME: {e}")
   finally:
     driver.quit()
     print(f"✴️ [SELENIUM] Finished")
@@ -272,7 +272,7 @@ def convert_polish_date(date_str):
 
 # Асинхронная обертка
 # Aiogram работает асинхронно, а Selenium - синхронно.
-# Чтобы бот не завис, мы запускаем Selenium в отдельном потоке через to_thread
+# Чтобы бот не завис, запускаю Selenium в отдельном потоке через to_thread
 async def search_doctors_func(doctor_name: str,doctor_name_spec:str,date:str,city:str):
   result = await asyncio.to_thread(run_selenium_parse,doctor_name,doctor_name_spec,date,city)
   return result
