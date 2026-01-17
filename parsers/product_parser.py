@@ -16,7 +16,7 @@ load_dotenv("tokens.env")
 
 URL = os.getenv("URL_product")
 
-async def search_products_func(category: str,budget:str):
+def search_products_func(category: str,budget:str):
   print(f"✳️ [SELENIUM] Starts...")
   print(f"Query: {category}, Date: {budget}")
 
@@ -25,7 +25,8 @@ async def search_products_func(category: str,budget:str):
   chrome_option.add_argument("--window-size=1920,1080")
   chrome_option.add_argument("--no-sandbox")
   chrome_option.add_argument("--disable-dev-shm-usage")
-  chrome_option.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+  chrome_option.add_argument("--disable-blink-features=AutomationControlled") 
+  chrome_option.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
   service = Service(ChromeDriverManager().install())
   driver = webdriver.Chrome(service=service,options=chrome_option)
@@ -36,24 +37,51 @@ async def search_products_func(category: str,budget:str):
   parsed_data = []
   
   try:
-    cook = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "sp-cc-accept")))
+    cook = wait.until(EC.presence_of_element_located((By.ID, "sp-cc-accept")))
     cook.click()
 
     time.sleep(1.5)
 
-    container = driver.find_element(By.ID, "twotabsearchtextbox")
-    container.click()
+
     try:
-      inp = container.find_element(By.ID, "twotabsearchtextbox")
-      inp.clear()
-      inp.send_keys(category)
+      container = driver.find_element(By.ID, "twotabsearchtextbox")
+      container.click()
+      container.clear()
+      container.send_keys(category)
       time.sleep(0.5)
 
-      inp.send_keys(Keys.ENTER)
+      container.send_keys(Keys.ENTER)
 
       try:
-        menu = driver.find_element(By.XPATH, "//span[@data-component-type='s-search-results'")
+        wait.until(EC.presence_of_element_located((By.XPATH, "//span[@data-component-type='s-search-results']")))
+        new_budget = int(budget)
 
+
+        try:
+          min = driver.find_element(By.ID, "p_36/dynamic-picker-0")
+          min_text_el = min.find_element(By.CSS_SELECTOR, "span.a-size-base")
+
+          text = min_text_el.text
+          new_text = text.replace("Do","").replace("zł","").strip()
+          new_text = new_text.replace("\u00A0","").replace(" ","")
+          min_text = int(new_text)
+
+          if new_budget <= min_text:
+            button = min.find_element(By.TAG_NAME,"a")
+            button.click()
+
+            time.sleep(1)
+        except Exception as e:
+          print(f"❌ [ERROR] Cant find a button with start price")
+
+        try:
+          menu = driver.find_elements(By.XPATH, "//div[@data-component-type='s-search-result']")
+          print("✅ MENU was found")
+          if menu:
+            first = menu[0]
+            print(f"✅ Item was found{first.text[:50]}")
+        except Exception as e:
+          print(f"❌ [ERROR] No results found or XPath error: {e}")
 
       except Exception as e:
         driver.save_screenshot("error_screenshot.png")
@@ -68,11 +96,11 @@ async def search_products_func(category: str,budget:str):
   finally:
     driver.quit()
     print(f"✴️ [SELENIUM] Finished")
+
+  return parsed_data
     
 
 
-
-
-async def search_doctors_func(category: str,budget:str):
+async def product_func(category: str,budget:str):
   result = await asyncio.to_thread(search_products_func,category,budget)
   return result

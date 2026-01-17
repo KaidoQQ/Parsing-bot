@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import sqlite3
 import os
 from parsers.doctor_parser import search_doctors_func
-from parsers.product_parser import search_products_func
+from parsers.product_parser import product_func
 from tech.to_exel import excel_file
 from tech.database import DataBase
 from aiogram.types import FSInputFile
@@ -201,7 +201,7 @@ async def product_category_search(message: types.Message, state:FSMContext):
 @dp.message(ProductSearch.waiting_for_category)
 async def product_category_chosen(message: types.Message, state:FSMContext):
   await state.update_data(category = message.text)
-  await message.answer("Okay. What is your *Budget*? (e.g., 1000 USD):")
+  await message.answer("Okay. What is your *Budget*? (e.g., 1000 ZŁ):")
   await state.set_state(ProductSearch.waiting_for_budget)
 
 @dp.message(ProductSearch.waiting_for_budget)
@@ -211,13 +211,29 @@ async def product_budget_chosen(message: types.Message, state: FSMContext):
   budget = message.text
 
   search_query = f"Category: {category}, Budget: {budget}"
-  db.add_search_log(message.from_user.id, "product_search", search_query)
+  cached_path = db.get_cached_file(search_query)
 
+  if cached_path and os.path.exists(cached_path):
+    print(f"📦 Found in cache: {cached_path}")
+    await message.answer("📦 Found cached result! Sending file...")
+
+    document = FSInputFile(cached_path, filename=f"{category}_list.xlsx")
+    await message.answer_document(document, caption=f"✅ Done! (Loaded from cache)")
+    await state.clear()
+    return 
+  
   await message.answer(f"🔎 Searching for *{category}* with budget *{budget}*... Please wait.")
 
-  result_data = await search_products_func(category,budget)
-  file_path = await excel_file(result_data)
+  result_data = await product_func(category,budget)
+
+  safe_name = category.replace(" ", "_")
+  new_filename = f"cache/{safe_name}_{budget}.xlsx"
+
+  file_path = await excel_file(result_data,filename=new_filename)
+  
   if file_path:
+    db.add_search_log(message.from_user.id, "doctor_search", search_query, file_path)
+
     document = FSInputFile(file_path)
     await message.answer_document(document, caption=f"✅ Done! Here is the list for you")
   else:
