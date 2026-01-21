@@ -12,7 +12,8 @@ import sqlite3
 import os
 from parsers.doctor_parser import search_doctors_func
 from parsers.product_parser import product_func
-from tech.to_exel import excel_file
+from tech.to_exel import excel_file_doctor 
+from tech.to_exel import excel_file_product
 from tech.database import DataBase
 from aiogram.types import FSInputFile
 
@@ -122,7 +123,7 @@ async def doctor_date_chosen_spec(message: types.Message, state: FSMContext):
   safe_name = name.replace(" ", "_")
   new_filename = f"cache/{safe_name}_{city}_{date}.xlsx"
 
-  file_path = await excel_file(result_data, filename=new_filename)
+  file_path = await excel_file_doctor(result_data, filename=new_filename)
 
   if file_path:
     db.add_search_log(message.from_user.id, "doctor_search", search_query, file_path)
@@ -180,7 +181,7 @@ async def doctor_date_chosen_spec(message: types.Message, state: FSMContext):
   safe_name = name.replace(" ", "_")
   new_filename = f"cache/{safe_name}_{city}_{date}.xlsx"
 
-  file_path = await excel_file(result_data, filename=new_filename)
+  file_path = await excel_file_doctor(result_data, filename=new_filename)
 
   if file_path:
     db.add_search_log(message.from_user.id, "doctor_search", search_query, file_path)
@@ -229,10 +230,10 @@ async def product_budget_chosen(message: types.Message, state: FSMContext):
   safe_name = category.replace(" ", "_")
   new_filename = f"cache/{safe_name}_{budget}.xlsx"
 
-  file_path = await excel_file(result_data,filename=new_filename)
+  file_path = await excel_file_product(result_data,filename=new_filename)
   
   if file_path:
-    db.add_search_log(message.from_user.id, "doctor_search", search_query, file_path)
+    db.add_search_log(message.from_user.id, "product_search", search_query, file_path)
 
     document = FSInputFile(file_path)
     await message.answer_document(document, caption=f"✅ Done! Here is the list for you")

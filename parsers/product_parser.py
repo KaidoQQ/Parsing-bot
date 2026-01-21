@@ -76,10 +76,83 @@ def search_products_func(category: str,budget:str):
 
         try:
           menu = driver.find_elements(By.XPATH, "//div[@data-component-type='s-search-result']")
-          print("✅ MENU was found")
           if menu:
-            first = menu[0]
-            print(f"✅ Item was found{first.text[:50]}")
+            print(f"✅ MENU was found, total items: {len(menu)}")
+            for product in menu[:30]:
+              print(f"✅ Item was found{product.text[:30]}")
+              name = None
+              price_clear = None
+              review = None
+              url = None
+              start_url = "https://www.amazon.pl"
+
+              try:
+                name_element = product.find_element(By.CSS_SELECTOR, "h2 span")
+                name = name_element.text
+                print(f"✅ Name: {name}")
+              except Exception as e:
+                print(f"❌ [ERROR] Problem with name: {e}")
+
+              try:
+                price_text_el = product.find_element(By.CLASS_NAME, "a-price")
+
+                price_text = price_text_el.text
+
+                price_clean = (price_text
+                .replace("\n", ".")      # 34\n99 → 34.99
+                .replace(",", ".")        
+                .replace("zł", "")
+                .replace("\u00A0", "")
+                .replace(" ", "")
+                .strip())
+
+                price_clear = float(price_clean)
+                print(f"✅  Price:{price_clear}")
+              except Exception as e:
+                print(f"❌  [ERROR] Problem with price: {e}")
+
+              try:
+                review_block = product.find_element(By.CSS_SELECTOR, "[data-cy='reviews-block']")
+                review_rait = review_block.find_element(By.CSS_SELECTOR, "span.a-size-small.a-color-base")
+
+                review_text = review_rait.text
+
+                review_clear = review_text.replace(",",".")
+                review = float(review_clear)
+                print(f"✅  Review:{review}")
+              except Exception as e:
+                print(f"❌  [ERROR] Problem with review: {e}")
+
+              try:
+                link_element = product.find_element(By.CSS_SELECTOR, "a.a-link-normal")
+                product_url = link_element.get_attribute("href")
+
+                if product_url.startswith("/"):
+                  url = start_url + product_url
+                else:
+                  url = product_url
+
+                print(f"✅  URL:{url}")
+
+              except Exception as e:
+                print(f"❌ [ERROR] Problem with URL: {e}")
+
+              if price_clear and price_clear <= new_budget:
+                parsed_doc = {
+                'name' : name,
+                'price' : price_clear,
+                'review' : review,
+                'link' : url
+              }
+                parsed_data.append(parsed_doc)
+                print(f"✅ Product: {name[:40]} | Price: {price_clear} zł | Review: {review} | Link: {url[:50]}...")
+                print()
+              else:
+                print(f"⚠️  Product too expensive: {price_clear} > {new_budget}")
+
+          else:
+            print("❌ [ERROR] Cant find a Menu card!")
+
         except Exception as e:
           print(f"❌ [ERROR] No results found or XPath error: {e}")
 
