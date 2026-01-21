@@ -1,6 +1,6 @@
 # 🤖 Async Parsing Bot
 
-A modular Telegram bot built with **Python 3.10+**, **Aiogram 3.x**, and **Selenium**. Designed to automate the search for doctor appointments and monitor product prices.
+A modular Telegram bot built with **Python 3.10+**, **Aiogram 3.x**, and **Selenium**. Designed to automate the search for doctor appointments and monitor product prices.Currently, the bot works with Polish websites. It uses https://lekarzebezkolejki.pl for doctors and Amazon for product parsing.
 
 ## 🚀 Features
 
