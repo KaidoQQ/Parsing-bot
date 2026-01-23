@@ -142,19 +142,19 @@ async def doctor_name_search(message: types.Message, state: FSMContext):
   await state.set_state(DoctorSearch.waiting_for_name)
 
 @dp.message(DoctorSearch.waiting_for_name)
-async def doctor_name_chosen_spec(message: types.Message, state: FSMContext):
+async def doctor_name_chosen(message: types.Message, state: FSMContext):
   await state.update_data(doctor_name = message.text)
   await message.answer("Got it. Now please enter the *City* (e.g., Krakow):")
   await state.set_state(DoctorSearch.waiting_for_city)
 
 @dp.message(DoctorSearch.waiting_for_city)
-async def doctor_name_chosen_spec(message: types.Message, state: FSMContext):
+async def doctor_name_chosen(message: types.Message, state: FSMContext):
   await state.update_data(city = message.text)
   await message.answer("Got it. Now please enter the *Date or Period* (e.g., Nearest):")
   await state.set_state(DoctorSearch.waiting_for_date)
 
 @dp.message(DoctorSearch.waiting_for_date)
-async def doctor_date_chosen_spec(message: types.Message, state: FSMContext):
+async def doctor_date_chosen(message: types.Message, state: FSMContext):
   user_data = await state.get_data()
   name = user_data['doctor_name'].lower().strip()
   city = user_data['city'].lower().strip()
